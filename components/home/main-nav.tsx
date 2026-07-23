@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 
 interface MainNavProps {
   activeTab?: string;
@@ -118,12 +119,19 @@ export const MainNav: React.FC<MainNavProps> = ({
           >
             Subscribe
           </button>
-          <button
-            type="button"
-            className="bg-white hover:bg-[#F9FAFB] text-[#0D0D0F] border border-[#D1D5DB] text-[12px] sm:text-[13px] font-medium px-3 sm:px-5 py-1.5 sm:py-2 rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            Login
-          </button>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="bg-[#FFFFFF] hover:bg-[#F9FAFB] text-[#0D0D0F] border border-[#D1D5DB] text-[12px] sm:text-[13px] font-medium px-3 sm:px-5 py-1.5 sm:py-2 rounded-[6px] transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Login
+              </button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
         </div>
       </div>
 
