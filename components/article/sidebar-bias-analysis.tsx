@@ -4,21 +4,21 @@ import React from "react";
 import { Info } from "lucide-react";
 
 export interface SidebarBiasAnalysisProps {
-  overallLabel?: string;
-  overallPercent?: number;
-  sourcesCount?: number;
-  leftPercent?: number;
-  centerPercent?: number;
-  rightPercent?: number;
+  overallLabel: string;
+  leftPercent: number;
+  centerPercent: number;
+  rightPercent: number;
+  confidence: number;
+  sentimentLabel: string;
 }
 
 export const SidebarBiasAnalysis: React.FC<SidebarBiasAnalysisProps> = ({
-  overallLabel = "Right",
-  overallPercent = 40,
-  sourcesCount = 7,
-  leftPercent = 18,
-  centerPercent = 42,
-  rightPercent = 40,
+  overallLabel,
+  leftPercent,
+  centerPercent,
+  rightPercent,
+  confidence,
+  sentimentLabel,
 }) => {
   return (
     <div className="w-full bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm flex flex-col gap-4">
@@ -42,14 +42,12 @@ export const SidebarBiasAnalysis: React.FC<SidebarBiasAnalysisProps> = ({
           Overall Bias
         </div>
         <div className="text-[26px] md:text-[28px] font-extrabold text-[#003B95] tracking-tight leading-snug">
-          {overallLabel} {overallPercent}%
+          {overallLabel}
         </div>
-        <a
-          href="#sources"
-          className="text-[12px] font-medium text-[#003B95] underline underline-offset-2 hover:text-[#002566] transition-colors"
-        >
-          Based on {sourcesCount} balanced sources
-        </a>
+        <div className="text-[12px] font-medium text-[#6B7280] flex flex-col gap-0.5 mt-0.5">
+          <div>Confidence: {Math.round(confidence * 100)}%</div>
+          <div>Sentiment: {sentimentLabel}</div>
+        </div>
       </div>
 
       {/* Detailed Bars */}
@@ -99,9 +97,7 @@ export const SidebarBiasAnalysis: React.FC<SidebarBiasAnalysisProps> = ({
 
       {/* Explanatory Paragraph */}
       <p className="text-[12px] text-[#6B7280] leading-relaxed pt-1">
-        Our analysis is based on the political leaning of the publication and
-        how the story is framed. Sources are weighted by reliability and
-        recency.
+        This AI-estimated analysis is based on textual evidence in the article. Political framing is not objective truth.
       </p>
 
       {/* How We Analyze Bias Button */}

@@ -1,9 +1,5 @@
-import ArticleDetailPage from "./[id]/page";
+import { redirect } from "next/navigation";
 
 export default function ArticlePage() {
-  return (
-    <ArticleDetailPage
-      params={Promise.resolve({ id: "2" })}
-    />
-  );
+  redirect("/");
 }
