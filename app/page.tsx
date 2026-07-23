@@ -161,7 +161,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#0D0D0F] font-sans flex flex-col justify-between selection:bg-[#0D0D0F] selection:text-white">
+    <div className="min-h-screen bg-[#F9FAFB] text-[#0D0D0F] font-sans flex flex-col justify-between selection:bg-[#0D0D0F] selection:text-white overflow-x-hidden">
       {/* Top Header Utility Bar & Main Navigation */}
       <div>
         <HeaderUtilityBar />
