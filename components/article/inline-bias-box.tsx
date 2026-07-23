@@ -4,17 +4,15 @@ import React from "react";
 import { Info } from "lucide-react";
 
 export interface InlineBiasBoxProps {
-  leftPercent?: number;
-  centerPercent?: number;
-  rightPercent?: number;
-  sourcesCount?: number;
+  leftPercent: number;
+  centerPercent: number;
+  rightPercent: number;
 }
 
 export const InlineBiasBox: React.FC<InlineBiasBoxProps> = ({
-  leftPercent = 18,
-  centerPercent = 42,
-  rightPercent = 40,
-  sourcesCount = 7,
+  leftPercent,
+  centerPercent,
+  rightPercent,
 }) => {
   return (
     <div className="w-full bg-white border border-[#E5E7EB] rounded-lg p-4 my-6 shadow-sm">
@@ -57,9 +55,9 @@ export const InlineBiasBox: React.FC<InlineBiasBoxProps> = ({
         </div>
       </div>
 
-      {/* Sources Count */}
+      {/* AI Disclaimer */}
       <div className="mt-2.5 text-[12px] text-[#6B7280] font-medium">
-        {sourcesCount} sources
+        AI-estimated political framing
       </div>
     </div>
   );
