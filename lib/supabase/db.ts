@@ -1,4 +1,4 @@
-import { createAdminClient, createClient } from './client';
+import { createAdminClient } from './client';
 import type {
   Article,
   ArticleAnalysis,
@@ -14,6 +14,26 @@ import type {
 // SOURCES DATA ACCESS
 // =============================================================================
 
+function formatError(error: unknown): string {
+  if (!error) return 'Unknown error';
+  if (typeof error === 'object') {
+    const errObj = error as { message?: string; code?: string; details?: string; hint?: string };
+    if (errObj.message) return `${errObj.message}${errObj.code ? ` (${errObj.code})` : ''}`;
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+  return String(error);
+}
+
+function isTableNotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const errObj = error as { code?: string; message?: string };
+  return errObj.code === 'PGRST205' || Boolean(errObj.message?.includes('schema cache'));
+}
+
 /**
  * Fetch all active news sources from Supabase.
  */
@@ -26,7 +46,11 @@ export async function getActiveSources(): Promise<Source[]> {
     .order('name', { ascending: true });
 
   if (error) {
-    console.error('Error fetching active sources:', error);
+    if (isTableNotFoundError(error)) {
+      console.warn('[Supabase] Database tables not found. Please execute the SQL in supabase/schema.sql in your Supabase SQL Editor.');
+      return [];
+    }
+    console.error('Error fetching active sources:', formatError(error));
     throw error;
   }
 
@@ -44,7 +68,7 @@ export async function getAllSources(): Promise<Source[]> {
     .order('name', { ascending: true });
 
   if (error) {
-    console.error('Error fetching all sources:', error);
+    console.error('Error fetching all sources:', formatError(error));
     throw error;
   }
 
@@ -150,11 +174,6 @@ export async function insertArticles(
   return (data as Article[]) || [];
 }
 
-interface PendingArticlesQueryBuilder {
-  limit: (l: number) => Promise<{ data: unknown; error: unknown }>;
-  then: Promise<{ data: unknown; error: unknown }>['then'];
-}
-
 /**
  * Section 19 Pending-analysis check rule:
  * Detect pending articles by LEFT JOINing `articles` to `article_analyses`.
@@ -165,13 +184,8 @@ export async function getPendingArticlesForAnalysis(limit?: number): Promise<Art
   const supabase = createAdminClient();
 
   // LEFT JOIN articles with article_analyses and filter where article_analyses.id IS NULL
-  let query: PendingArticlesQueryBuilder = (supabase.from('articles') as unknown as {
-    select: (cols: string) => {
-      is: (col: string, val: null) => {
-        order: (col: string, opts: { ascending: boolean }) => PendingArticlesQueryBuilder;
-      };
-    };
-  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (supabase.from('articles') as any)
     .select('*, article_analyses!left(id)')
     .is('article_analyses.id', null)
     .order('scraped_at', { ascending: false });
@@ -203,7 +217,7 @@ export async function getArticlesWithAnalysis(
   limit: number = 20,
   offset: number = 0
 ): Promise<ArticleWithDetails[]> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('articles')
     .select(
@@ -218,7 +232,11 @@ export async function getArticlesWithAnalysis(
     .range(offset, offset + limit - 1);
 
   if (error) {
-    console.error('Error fetching articles with analysis:', error);
+    if (isTableNotFoundError(error)) {
+      console.warn('[Supabase] Database tables not found. Please execute the SQL in supabase/schema.sql in your Supabase SQL Editor.');
+      return [];
+    }
+    console.error('Error fetching articles with analysis:', formatError(error));
     return [];
   }
 
@@ -231,7 +249,7 @@ export async function getArticlesWithAnalysis(
 export async function getArticleWithAnalysisById(
   id: string
 ): Promise<ArticleWithDetails | null> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('articles')
     .select(
@@ -246,7 +264,11 @@ export async function getArticleWithAnalysisById(
 
   if (error) {
     if (error.code === 'PGRST116') return null;
-    console.error(`Error fetching article ${id} with analysis:`, error);
+    if (isTableNotFoundError(error)) {
+      console.warn('[Supabase] Database tables not found. Please execute the SQL in supabase/schema.sql in your Supabase SQL Editor.');
+      return null;
+    }
+    console.error(`Error fetching article ${id} with analysis:`, formatError(error));
     return null;
   }
 

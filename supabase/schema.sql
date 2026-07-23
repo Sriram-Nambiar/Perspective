@@ -140,9 +140,11 @@ CREATE POLICY "Allow public read access to article_analyses"
 -- -----------------------------------------------------------------------------
 INSERT INTO public.sources (name, listing_url, parser_strategy, active, logo_url)
 VALUES
+  ('The Indian Express', 'https://indianexpress.com', 'indianexpress', true, 'https://indianexpress.com/wp-content/themes/indianexpress/images/express-logo-n.png'),
+  ('The Hindu', 'https://www.thehindu.com', 'hindu', true, 'https://www.thehindu.com/theme/images/th-online/logo.png'),
+  ('Times of India', 'https://timesofindia.indiatimes.com', 'toi', true, 'https://timesofindia.indiatimes.com/photo/52672522.cms'),
+  ('NDTV', 'https://www.ndtv.com', 'ndtv', true, 'https://www.ndtv.com/static/images/logo_ndtv.png'),
+  ('Hindustan Times', 'https://www.hindustantimes.com', 'ht', true, 'https://www.hindustantimes.com/res/images/ht-logo.svg'),
   ('Reuters', 'https://www.reuters.com', 'reuters', true, 'https://www.reuters.com/pf/resources/images/reuters/logo-vertical-default-png.png'),
-  ('NPR', 'https://www.npr.org', 'npr', true, 'https://media.npr.org/images/logo_npr_news.png'),
-  ('Fox News', 'https://www.foxnews.com', 'foxnews', true, 'https://static.foxnews.com/static/orion/styles/img/fox-news/logos/fox-news-logo.svg'),
-  ('BBC News', 'https://www.bbc.com/news', 'bbc', true, 'https://nav.files.bbci.co.uk/searchbox/3.1.2/images/bbc-logo.svg'),
-  ('The Guardian', 'https://www.theguardian.com/us', 'guardian', true, 'https://assets.guim.co.uk/images/guardian-logo-100.png')
+  ('BBC News', 'https://www.bbc.com/news', 'bbc', true, 'https://nav.files.bbci.co.uk/searchbox/3.1.2/images/bbc-logo.svg')
 ON CONFLICT DO NOTHING;
