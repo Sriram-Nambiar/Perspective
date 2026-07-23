@@ -7,13 +7,15 @@ import { Info } from "lucide-react";
 export interface ArticleData {
   id: string;
   title: string;
-  category: string;
-  sourceCategory: string;
+  sourceName: string;
   imageUrl: string;
-  leftBias: number;
-  centerBias: number;
-  rightBias: number;
-  sourcesCount: number;
+  publishedDate: string;
+  sentimentLabel: string;
+  biasLabel: string;
+  leftPercent: number;
+  centerPercent: number;
+  rightPercent: number;
+  confidence: number;
 }
 
 interface HomeCardProps {
@@ -24,19 +26,50 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
   const {
     id,
     title,
-    category,
-    sourceCategory,
+    sourceName,
     imageUrl,
-    leftBias,
-    centerBias,
-    rightBias,
-    sourcesCount,
+    publishedDate,
+    sentimentLabel,
+    biasLabel,
+    leftPercent,
+    centerPercent,
+    rightPercent,
+    confidence,
   } = article;
 
-  const total = leftBias + centerBias + rightBias;
-  const leftPct = total > 0 ? (leftBias / total) * 100 : 0;
-  const centerPct = total > 0 ? (centerBias / total) * 100 : 0;
-  const rightPct = total > 0 ? (rightBias / total) * 100 : 0;
+  const getSentimentBadgeClass = (sentiment: string) => {
+    const s = (sentiment || "").toLowerCase();
+    if (s.includes("pos")) return "bg-green-100 text-green-800";
+    if (s.includes("neg")) return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-800";
+  };
+
+  const formattedSentiment = sentimentLabel
+    ? sentimentLabel.charAt(0).toUpperCase() + sentimentLabel.slice(1)
+    : "";
+
+  const formattedBiasLabel = biasLabel
+    ? biasLabel.charAt(0).toUpperCase() + biasLabel.slice(1)
+    : "";
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const confidencePercent = Math.round(
+    confidence <= 1 ? confidence * 100 : confidence
+  );
 
   return (
     <article className="bg-white border border-[#E5E7EB] rounded-[12px] overflow-hidden shadow-2xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between">
@@ -69,11 +102,18 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
 
         {/* Content Details */}
         <div className="p-4 flex flex-col gap-2">
-          {/* Category Tag Breadcrumb */}
-          <div className="text-[12px] font-medium text-[#6B7280]">
-            <span>{category}</span>
-            <span className="mx-1.5">•</span>
-            <span>{sourceCategory}</span>
+          {/* Source & Sentiment Badge */}
+          <div className="flex items-center justify-between text-[12px] font-medium text-[#6B7280]">
+            <span>{sourceName}</span>
+            {sentimentLabel && (
+              <span
+                className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${getSentimentBadgeClass(
+                  sentimentLabel
+                )}`}
+              >
+                {formattedSentiment}
+              </span>
+            )}
           </div>
 
           {/* Title */}
@@ -82,6 +122,13 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
               {title}
             </h2>
           </Link>
+
+          {/* Published Date */}
+          {publishedDate && (
+            <div className="text-[12px] text-[#6B7280]">
+              {formatDate(publishedDate)}
+            </div>
+          )}
         </div>
       </div>
 
@@ -90,39 +137,45 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
         {/* Bias Distribution Bar */}
         <div className="w-full h-7 rounded-[4px] overflow-hidden flex text-[11px] font-medium text-white select-none">
           {/* Left Segment */}
-          {leftPct > 0 && (
+          {leftPercent > 0 && (
             <div
-              style={{ width: `${leftPct}%` }}
+              style={{ width: `${leftPercent}%` }}
               className="bg-[#B42318] h-full flex items-center justify-center px-1 font-semibold truncate transition-all duration-300"
             >
-              Left {Math.round(leftBias)}%
+              Left {Math.round(leftPercent)}%
             </div>
           )}
 
           {/* Center Segment */}
-          {centerPct > 0 && (
+          {centerPercent > 0 && (
             <div
-              style={{ width: `${centerPct}%` }}
+              style={{ width: `${centerPercent}%` }}
               className="bg-[#F3F4F6] text-[#374151] h-full flex items-center justify-center px-1 font-semibold truncate border-x border-white/50 transition-all duration-300"
             >
-              Center {Math.round(centerBias)}%
+              Center {Math.round(centerPercent)}%
             </div>
           )}
 
           {/* Right Segment */}
-          {rightPct > 0 && (
+          {rightPercent > 0 && (
             <div
-              style={{ width: `${rightPct}%` }}
+              style={{ width: `${rightPercent}%` }}
               className="bg-[#1D4ED8] h-full flex items-center justify-center px-1 font-semibold truncate transition-all duration-300"
             >
-              Right {Math.round(rightBias)}%
+              Right {Math.round(rightPercent)}%
             </div>
           )}
         </div>
 
-        {/* Sources Count */}
-        <div className="text-[12px] font-bold text-[#4B5563]">
-          {sourcesCount} sources
+        {/* AI Bias & Confidence */}
+        <div className="flex items-center justify-between text-[12px] font-bold text-[#4B5563]">
+          <div className="flex items-center gap-1.5">
+            <span className="px-1.5 py-0.5 bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-bold rounded uppercase">
+              AI
+            </span>
+            <span>estimated: {formattedBiasLabel}</span>
+          </div>
+          <div>Confidence: {confidencePercent}%</div>
         </div>
       </div>
     </article>
