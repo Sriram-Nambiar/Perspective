@@ -1,4 +1,5 @@
 import React from "react";
+import { notFound } from "next/navigation";
 import { HeaderUtilityBar } from "@/components/home/header-utility-bar";
 import { MainNav } from "@/components/home/main-nav";
 import { TopicPillsBar } from "@/components/home/topic-pills-bar";
@@ -10,13 +11,96 @@ import { SidebarAISummary } from "@/components/article/sidebar-ai-summary";
 import { SidebarSourceBreakdown } from "@/components/article/sidebar-source-breakdown";
 import { NewsletterBanner } from "@/components/article/newsletter-banner";
 import { HomeFooter } from "@/components/home/home-footer";
+import { getArticleWithAnalysisById, getArticlesWithAnalysis } from "@/lib/supabase/db";
+import type { Json } from "@/lib/supabase/types";
+
+export const dynamic = "force-dynamic";
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function estimateReadTime(text: string): string {
+  const words = text.split(/\s+/).length;
+  const minutes = Math.max(1, Math.ceil(words / 200));
+  return `${minutes} min read`;
+}
+
+function parseJsonArray(val: Json | null | undefined): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return val.map((item) => {
+      if (typeof item === "string") return item;
+      return String(item);
+    });
+  }
+  return [];
+}
+
+function parseLoadedTerms(
+  val: Json | null | undefined
+): Array<{ term: string; explanation: string; biasTarget?: string }> {
+  if (!val || !Array.isArray(val)) return [];
+  return val
+    .filter(
+      (item): item is { term: string; explanation: string; biasTarget?: string } =>
+        typeof item === "object" &&
+        item !== null &&
+        "term" in item &&
+        "explanation" in item
+    )
+    .map((item) => ({
+      term: String(item.term),
+      explanation: String(item.explanation),
+      biasTarget: item.biasTarget ? String(item.biasTarget) : undefined,
+    }));
+}
 
 export default async function ArticleDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await params;
+  const { id } = await params;
+
+  const article = await getArticleWithAnalysisById(id);
+
+  if (!article) {
+    notFound();
+  }
+
+  const analysis = article.analysis;
+  const source = article.source;
+
+  // Fetch related articles (recent articles from the same source, excluding current)
+  const allRecent = await getArticlesWithAnalysis(7, 0);
+  const relatedArticles = allRecent
+    .filter((a) => a.id !== article.id)
+    .slice(0, 6)
+    .map((a) => ({
+      id: a.id,
+      title: a.title,
+      sourceName: a.source?.name || "Unknown",
+      publishedDate: formatDate(a.published_date),
+      imageUrl: a.image_url,
+    }));
+
+  // Parse raw_text into paragraphs
+  const paragraphs = article.raw_text
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+
+  const framingNotes = analysis ? parseJsonArray(analysis.framing_notes) : [];
+  const loadedTerms = analysis ? parseLoadedTerms(analysis.loaded_terms) : [];
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#0D0D0F] font-sans flex flex-col justify-between selection:bg-[#0D0D0F] selection:text-white overflow-x-hidden">
@@ -33,95 +117,83 @@ export default async function ArticleDetailPage({
             <div className="lg:col-span-8 flex flex-col">
               {/* Article Header & Featured Image */}
               <ArticleHeader
-                breadcrumbs={["Home", "India", "Agriculture"]}
-                title="Centre Approves ₹2.4 Lakh Crore Scheme to Boost Farmer Income"
-                author="Ananya Sharma"
-                date="May 31, 2026"
-                readTime="10 min read"
-                imageUrl="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1200&auto=format&fit=crop"
-                imageCaption="A farmer inspects his crop at a field in Punjab. The new scheme aims to double farmers' income by 2030."
-                photoCredit="Photo: PTI"
+                breadcrumbs={["Home", source?.name || "News"]}
+                title={article.title}
+                author={source?.name || "Staff Reporter"}
+                date={formatDate(article.published_date)}
+                readTime={estimateReadTime(article.raw_text)}
+                imageUrl={article.image_url}
+                imageCaption={article.title}
+                photoCredit={`Source: ${source?.name || "Unknown"}`}
               />
 
               {/* Inline Bias Distribution Box */}
-              <InlineBiasBox
-                leftPercent={18}
-                centerPercent={42}
-                rightPercent={40}
-                sourcesCount={7}
-              />
+              {analysis && (
+                <InlineBiasBox
+                  leftPercent={analysis.left_percentage}
+                  centerPercent={analysis.center_percentage}
+                  rightPercent={analysis.right_percentage}
+                />
+              )}
 
               {/* Article Body Content */}
               <article className="prose prose-neutral max-w-none text-[#1F2937] text-[15px] md:text-[16px] leading-[1.75] flex flex-col gap-4 font-normal">
-                <p>
-                  The Union Cabinet on Saturday approved a ₹2.4 lakh crore PM
-                  Kisan Samriddhi Yojana to enhance productivity, ensure assured
-                  prices and reduce input costs for farmers across the country.
-                </p>
-
-                <p>
-                  The scheme, to be implemented from July 1, 2026, will benefit
-                  an estimated 86 million small and marginal farmers. It
-                  includes direct income support, crop diversification
-                  incentives, low-interest loans and investment in storage and
-                  cold chains.
-                </p>
-
-                {/* Quote Callout */}
-                <blockquote className="my-3 pl-4 border-l-4 border-[#0D0D0F] italic font-medium text-[#111827] text-[15px] md:text-[16px] leading-relaxed">
-                  &ldquo;This initiative reflects our commitment to the annadata of the
-                  nation. Our goal is to double farmers&apos; income by 2030,&rdquo; Prime
-                  Minister Narendra Modi said while addressing a farmers&apos;
-                  gathering in Varanasi via video conference.
-                </blockquote>
-
-                <p>
-                  Agriculture Minister Shivraj Singh Chouhan said the scheme
-                  will also promote natural farming, reduce dependency on
-                  chemical fertilisers and encourage water conservation.
-                </p>
-
-                <p>
-                  States have been urged to ensure timely implementation and
-                  transparency in beneficiary selection. The government will set
-                  up a dashboard to track progress in real-time.
-                </p>
-
-                <p>
-                  Farmer unions welcomed the announcement but demanded a legal
-                  guarantee on minimum support price (MSP) for all crops. Talks
-                  between the government and union leaders are expected in the
-                  coming weeks.
-                </p>
-
-                <p>
-                  Market experts believe the scheme will increase rural
-                  consumption and give a boost to sectors such as FMCG,
-                  agri-tech and farm equipment.
-                </p>
+                {paragraphs.map((paragraph, idx) => (
+                  <p key={idx}>{paragraph}</p>
+                ))}
               </article>
 
               {/* Related Stories Grid */}
-              <RelatedStories />
+              <RelatedStories stories={relatedArticles} />
             </div>
 
             {/* Right Sidebar Column (4 cols) */}
             <aside className="lg:col-span-4 flex flex-col gap-6 sticky top-6">
-              <SidebarBiasAnalysis
-                overallLabel="Right"
-                overallPercent={40}
-                sourcesCount={7}
-                leftPercent={18}
-                centerPercent={42}
-                rightPercent={40}
-              />
+              {analysis && (
+                <>
+                  <SidebarBiasAnalysis
+                    overallLabel={
+                      (analysis.bias_label || "unclear").charAt(0).toUpperCase() +
+                      (analysis.bias_label || "unclear").slice(1)
+                    }
+                    leftPercent={analysis.left_percentage}
+                    centerPercent={analysis.center_percentage}
+                    rightPercent={analysis.right_percentage}
+                    confidence={analysis.confidence}
+                    sentimentLabel={
+                      (analysis.sentiment_label || "neutral").charAt(0).toUpperCase() +
+                      (analysis.sentiment_label || "neutral").slice(1)
+                    }
+                  />
 
-              <SidebarAISummary
-                generatedDate="May 31, 2026"
-                readTime="3 min read"
-              />
+                  <SidebarAISummary
+                    summary={analysis.summary}
+                    disclaimer={analysis.disclaimer}
+                    generatedDate={formatDate(analysis.created_at)}
+                  />
 
-              <SidebarSourceBreakdown totalSources={7} />
+                  <SidebarSourceBreakdown
+                    sourceName={source?.name || "Unknown Source"}
+                    biasLabel={
+                      (analysis.bias_label || "unclear").charAt(0).toUpperCase() +
+                      (analysis.bias_label || "unclear").slice(1)
+                    }
+                    leftPercent={analysis.left_percentage}
+                    centerPercent={analysis.center_percentage}
+                    rightPercent={analysis.right_percentage}
+                    framingNotes={framingNotes}
+                    loadedTerms={loadedTerms}
+                  />
+                </>
+              )}
+
+              {!analysis && (
+                <div className="w-full bg-white border border-[#E5E7EB] rounded-xl p-5 shadow-sm text-center">
+                  <p className="text-[14px] text-[#6B7280]">
+                    AI analysis is pending for this article.
+                  </p>
+                </div>
+              )}
             </aside>
           </div>
 
