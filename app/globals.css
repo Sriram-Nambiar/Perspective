@@ -43,10 +43,83 @@
   --radius-full: 9999px;
 }
 
+.dark {
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --surface: #18181B;
+  
+  --bg-primary: #18181B;
+  --bg-secondary: #0D0D0F;
+  --border-subtle: #27272A;
+  --divider-subtle: #27272A;
+  color-scheme: dark;
+}
+
 body {
   font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
   color: var(--text-primary);
   background-color: var(--bg-secondary);
+}
+
+/* Dark Mode Overrides */
+.dark body {
+  background-color: #0D0D0F !important;
+  color: #F9FAFB !important;
+}
+
+.dark .bg-\[\#F9FAFB\] {
+  background-color: #0D0D0F !important;
+  color: #F9FAFB !important;
+}
+
+.dark .bg-\[\#F8F9FA\] {
+  background-color: #121215 !important;
+  border-color: #27272A !important;
+  color: #D1D5DB !important;
+}
+
+.dark .bg-white {
+  background-color: #18181B !important;
+  border-color: #27272A !important;
+  color: #F9FAFB !important;
+}
+
+.dark .bg-\[\#F3F4F6\] {
+  background-color: #1F2937 !important;
+  border-color: #374151 !important;
+  color: #F9FAFB !important;
+}
+
+.dark .text-\[\#0D0D0F\] {
+  color: #F9FAFB !important;
+}
+
+.dark .text-\[\#1F2937\] {
+  color: #E5E7EB !important;
+}
+
+.dark .text-\[\#374151\],
+.dark .text-\[\#4B5563\] {
+  color: #D1D5DB !important;
+}
+
+.dark .text-\[\#6B7280\] {
+  color: #9CA3AF !important;
+}
+
+.dark .border-\[\#E5E7EB\],
+.dark .border-\[\#D1D5DB\],
+.dark .border-\[\#F3F4F6\] {
+  border-color: #27272A !important;
+}
+
+.dark .prose {
+  color: #E5E7EB !important;
+}
+
+.dark .prose blockquote {
+  border-left-color: #60A5FA !important;
+  color: #F3F4F6 !important;
 }
 
 /* Typography Utility Classes matching spec */
