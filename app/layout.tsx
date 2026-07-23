@@ -20,6 +20,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} h-full antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('theme');
+                  var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (saved === 'dark' || ( (!saved || saved === 'auto') && supportDarkMode)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full bg-[var(--bg-secondary)] text-[var(--text-primary)] font-sans flex flex-col">
         {children}
       </body>

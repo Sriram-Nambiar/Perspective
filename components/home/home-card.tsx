@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Info } from "lucide-react";
 
 export interface ArticleData {
@@ -21,6 +22,7 @@ interface HomeCardProps {
 
 export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
   const {
+    id,
     title,
     category,
     sourceCategory,
@@ -40,13 +42,13 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
     <article className="bg-white border border-[#E5E7EB] rounded-[12px] overflow-hidden shadow-2xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between">
       <div>
         {/* Image Container with Info Icon */}
-        <div className="relative w-full h-[200px] sm:h-[210px] bg-[#F3F4F6] overflow-hidden">
+        <Link href={`/article/${id}`} className="block relative w-full h-[200px] sm:h-[210px] bg-[#F3F4F6] overflow-hidden group">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imageUrl}
               alt={title}
-              className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[#9CA3AF] text-sm">
@@ -58,11 +60,12 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
           <button
             type="button"
             aria-label="Article perspective details"
+            onClick={(e) => e.preventDefault()}
             className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-xs text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <Info className="w-4 h-4" />
           </button>
-        </div>
+        </Link>
 
         {/* Content Details */}
         <div className="p-4 flex flex-col gap-2">
@@ -74,9 +77,11 @@ export const HomeCard: React.FC<HomeCardProps> = ({ article }) => {
           </div>
 
           {/* Title */}
-          <h2 className="text-[16px] sm:text-[17px] font-bold text-[#0D0D0F] leading-[1.3] line-clamp-2 hover:text-[#1D4ED8] transition-colors cursor-pointer">
-            {title}
-          </h2>
+          <Link href={`/article/${id}`}>
+            <h2 className="text-[16px] sm:text-[17px] font-bold text-[#0D0D0F] leading-[1.3] line-clamp-2 hover:text-[#1D4ED8] transition-colors cursor-pointer">
+              {title}
+            </h2>
+          </Link>
         </div>
       </div>
 
